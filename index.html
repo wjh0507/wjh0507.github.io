@@ -4,17 +4,17 @@
   <meta charset="utf-8">
   
   
-  <title>Hexo</title>
+  <title>学无止境</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <meta property="og:type" content="website">
-<meta property="og:title" content="Hexo">
+<meta property="og:title" content="学无止境">
 <meta property="og:url" content="http://example.com/index.html">
-<meta property="og:site_name" content="Hexo">
+<meta property="og:site_name" content="学无止境">
 <meta property="og:locale" content="en_US">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
   
-    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+    <link rel="alternate" href="/atom.xml" title="学无止境" type="application/atom+xml">
   
   
     <link rel="shortcut icon" href="/favicon.png">
@@ -39,7 +39,7 @@
   <div id="header-outer" class="outer">
     <div id="header-title" class="inner">
       <h1 id="logo-wrap">
-        <a href="/" id="logo">Hexo</a>
+        <a href="/" id="logo">学无止境</a>
       </h1>
       
     </div>
@@ -68,6 +68,206 @@
 
       <div class="outer">
         <section id="main">
+  
+    <article id="post-kafka自动创建设置" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2024/08/08/kafka%E8%87%AA%E5%8A%A8%E5%88%9B%E5%BB%BA%E8%AE%BE%E7%BD%AE/" class="article-date">
+  <time class="dt-published" datetime="2024-08-08T15:50:41.842Z" itemprop="datePublished">2024-08-08 23:50:41</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>Partitions与Replication Factor调整准则</p>
+<p>Partition 数目与Replication Factor是在创建一个topic时非常重要的两个参数，这两个参数的取值会直接影响到系统的性能与稳定性。</p>
+<p>尽量在第一次创建一个topic时就指定这两个参数，因为</p>
+<pre><code>如果Partition 数目在之后再次做调整，则会打乱key的顺序保证（同样的key会分布到不同的partition上）
+如果Replication Factor在之后再次增加，则会给集群带来更大的压力，可能会导致性能下降
+</code></pre>
+<ol>
+<li>Partition 数目</li>
+</ol>
+<p>一般来说，每个partition 能处理的吞吐为几MB&#x2F;s（仍需要基于根据本地环境测试后获取准确指标），增加更多的partitions意味着：</p>
+<pre><code>更高的并行度与吞吐
+可以扩展更多的（同一个consumer group中的）consumers
+若是集群中有较多的brokers，则可更大程度上利用闲置的brokers
+但是会造成Zookeeper的更多选举
+也会在Kafka中打开更多的文件
+</code></pre>
+<p>调整准则：</p>
+<pre><code>一般来说，若是集群较小（小于6个brokers），则配置2 x broker数的partition数。在这里主要考虑的是之后的扩展。若是集群扩展了一倍（例如12个），则不用担心会有partition不足的现象发生
+一般来说，若是集群较大（大于12个），则配置1 x broker 数的partition数。因为这里不需要再考虑集群的扩展情况，与broker数相同的partition数已经足够应付常规场景。若有必要，则再手动调整
+考虑最高峰吞吐需要的并行consumer数，调整partition的数目。若是应用场景需要有20个（同一个consumer group中的）consumer并行消费，则据此设置为20个partition
+考虑producer所需的吞吐，调整partition数目（如果producer的吞吐非常高，或是在接下来两年内都比较高，则增加partition的数目）
+</code></pre>
+<p>以上仅是几个基本准则，最重要的是：在本地集群做测试，以获取一个更合适的partition数目，不同的集群会有不同的性能。</p>
+<ol start="2">
+<li>Replication factor</li>
+</ol>
+<p>此参数决定的是records复制的数目，建议至少 设置为2，一般是3，最高设置为4。更高的replication factor（假设数目为N）意味着：</p>
+<pre><code>系统更稳定（允许N-1个broker宕机）
+更多的副本（如果acks=all，则会造成较高的延时）
+系统磁盘的使用率会更高（一般若是RF为3，则相对于RF为2时，会占据更多50% 的磁盘空间）
+</code></pre>
+<p>调整准则：</p>
+<pre><code>以3为起始（当然至少需要有3个brokers，同时也不建议一个Kafka 集群中节点数少于3个节点）
+如果replication 性能成为了瓶颈或是一个issue，则建议使用一个性能更好的broker，而不是降低RF的数目
+永远不要在生产环境中设置RF为1
+</code></pre>
+<ol start="3">
+<li>集群调整建议</li>
+</ol>
+<p>一个已被业界接受的准则是：</p>
+<pre><code>一个broker不应该承载超过2000 到 4000 个partitions（考虑此broker上所有来自不同topics的partitions）。同时，一个Kafka集群上brokers中所有的partitions总数最多不应超过20,000个。
+</code></pre>
+<p>此准则基于的原理是：在有broker宕机后，zookeeper需要重新做选举。若是partitions数目过多，则需要执行大量的leader elections。</p>
+<p>另外几个常规原则有：</p>
+<pre><code>如果集群中需要更多的partitions，则优先考虑增加brokers
+如果集群中需要20,000 个以上的partitions，则可以参考Netflix的模型，创建更多的Kafka 集群
+</code></pre>
+<p>最后需要注意的是：不要为一个topic创建超过1000个的partitions。我们也并不需要1000个partitions才能达到很高的吞吐。在开始的时候，选择一个更合理的partition数目，然后测试性能，根据测试结果再调整partitions 数目。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2024/08/08/kafka%E8%87%AA%E5%8A%A8%E5%88%9B%E5%BB%BA%E8%AE%BE%E7%BD%AE/" data-id="clznsccn50002okuk9e4f2uvv" data-title="" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
+    <article id="post-Kafka相关命令" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2024/08/08/Kafka%E7%9B%B8%E5%85%B3%E5%91%BD%E4%BB%A4/" class="article-date">
+  <time class="dt-published" datetime="2024-08-07T23:53:58.521Z" itemprop="datePublished">2024-08-08 07:53:58</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>##Kafka基础命令<br>说明：命令行参数中–zookeeper是2.2以前的版本，2.2之后使用–bootstrap-server</p>
+<h3 id="检查端口号"><a href="#检查端口号" class="headerlink" title="检查端口号"></a>检查端口号</h3><pre><code>ps -ef | grep kafka 
+netstat -tunlp|grep &quot;(2181|9092)&quot;
+</code></pre>
+<h3 id="topic相关"><a href="#topic相关" class="headerlink" title="topic相关"></a>topic相关</h3><p>###创建</p>
+<pre><code>bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 3 --topic TEST_TOPIC
+</code></pre>
+<h3 id="查看topic列表"><a href="#查看topic列表" class="headerlink" title="查看topic列表"></a>查看topic列表</h3><pre><code>bin/kafka-topics.sh --list --bootstrap-server localhost:9092
+</code></pre>
+<p>除了手动创建topic，还可以配置auto.create.topics.enable 参数(默认为true)，当一个不存在的topic发布时可自动创建,但分区和副本默认值为1，可通过修改num.partitions和default.replication.factor参数来修改</p>
+<p>上述有的版本bootstrap-server要改成zookeeper 2181用</p>
+<h3 id="查看某个topic信息"><a href="#查看某个topic信息" class="headerlink" title="查看某个topic信息"></a>查看某个topic信息</h3><pre><code>bin/kafka-topics.sh --describe --bootstrap-server localhost:9092 --topic TEST_TOPIC
+</code></pre>
+<p>4、修改某个topic的partition个数(分区只能增不能减)</p>
+<blockquote>
+<p>bin&#x2F;kafka-topics.sh –bootstrap-server localhost:2181 –alter –topic TEST_TOPIC –partitions 10</p>
+</blockquote>
+<p>5、删除某个topic(只会删除zookeeper内的元数据，消息文件需要手动删除)</p>
+<p>如果启动时server.properties没有配置delete.topic.enable&#x3D;true，此时删除只是把topic标记为：marked for deletion，日志数据（log.dirs配置的位置）并未删除</p>
+<blockquote>
+<p>bin&#x2F;kafka-topics.sh –bootstrap-server localhost:2181  –topic TEST_TOPIC –delete</p>
+</blockquote>
+<pre><code>producer相关
+</code></pre>
+<p>一般用来做测试，命令行和文件都支持</p>
+<blockquote>
+<p>bin&#x2F;kafka-console-producer –broker-list localhost:9092 –topic test<br>This is a message 哈哈哈哈哈哈哈</p>
+</blockquote>
+<p>预研测试的时候经常读文件更方便：</p>
+<p>cat data001.txt |  kafka-console-producer –broker-list localhost:9092 –topic test_data001 | &gt; out001.txt</p>
+<p>附：wc -l data.txt查看文件行数</p>
+<pre><code>consumer相关
+</code></pre>
+<p>1、查看所有消费者组</p>
+<blockquote>
+<p>bin&#x2F;kafka-consumer-groups –bootstrap-server localhost:9092 –list</p>
+</blockquote>
+<p>2、查看指定group（group01）的消费情况</p>
+<blockquote>
+<p>bin&#x2F;kafka-consumer-groups –describe –group group01 –bootstrap-server localhost:9092</p>
+</blockquote>
+<pre><code>console相关
+</code></pre>
+<p>1、生产数据</p>
+<blockquote>
+<p>bin&#x2F;kafka-console-producer –broker-list localhost:9092 –topic TEST_TOPIC</p>
+</blockquote>
+<p>2、消费数据</p>
+<blockquote>
+<p>bin&#x2F;kafka-console-consumer –bootstrap-server localhost:9092 –from-beginning –topic TEST_TOPIC</p>
+</blockquote>
+<pre><code>其他
+</code></pre>
+<p>1、重置指定topic的offset</p>
+<p>背景，因为程序写的不够好，辛苦造了2亿多数据跑入库测性能，跑到中间数据库服务器撑爆了，结果都写进日志了。。。<br>复制代码</p>
+<blockquote>
+<p>bin&#x2F;kafka-consumer-groups –bootstrap-server localhost:9092 –group group_test –reset-offsets -to-offset 97000000 –topic TEST_TOPIC –execute</p>
+</blockquote>
+<p>Other supported arguments:</p>
+<p>–shift-by [positive or negative integer] - Shifts offset forward or backward from given integer.往前或往后加减offset</p>
+<p>–to-current and –to-latest are same as –to-offset [integer] and –to-earliest.</p>
+<p>–to-datetime [Datetime format is yyyy-MM-ddTHH:mm:ss.xxx]</p>
+<blockquote>
+<p>bin&#x2F;kafka-consumer-groups –bootstrap-server localhost:9092 –group group_test –reset-offsets –to-datetime 2017-08-04T00:00:00.000 [ –all-topics or –topic <topic-name> ] –execute</p>
+</blockquote>
+<p>how to validata:</p>
+<blockquote>
+<p>bin&#x2F;kafka-consumer-groups –bootstrap-server locahost:9092 –group <group_id> –describe<br>复制代码</p>
+</blockquote>
+<p>注意：这里重置的offset是针对每个partition而言，重置offset之前，所有的consumer必须是inactive的，也就是应用消费必须暂停</p>
+<p> Kafka查看topic、consumer group状态命令</p>
+<p>最近工作中遇到需要使用kafka的场景，测试消费程序启动后，要莫名的过几十秒乃至几分钟才能成功获取到到topic的partition和offset，而后开始消费数据，于是学习了一下查看kafka broker里topic和consumer group状态的相关命令，这里记录一下。</p>
+<p>命令参考自《Kafka: The Definitive Guide》 Chapter 9 Administrating Kafka</p>
+<p>以下命令中使用的zookeeper配置地址为127.0.0.1:2181，bootstrap–server(即broker)地址为: 127.0.0.1:9292</p>
+<p>1，查看kafka topic列表，使用–list参数</p>
+<p>bin&#x2F;kafka-topics.sh –zookeeper 127.0.0.1:2181 –list<br>__consumer_offsets<br>lx_test_topic<br>test</p>
+<p>2，查看kafka特定topic的详情，使用–topic与–describe参数</p>
+<p>bin&#x2F;kafka-topics.sh –zookeeper 127.0.0.1:2181 –topic lx_test_topic –describe<br>Topic:lx_test_topic     PartitionCount:1        ReplicationFactor:1     Configs:<br>        Topic: lx_test_topic    Partition: 0    Leader: 0       Replicas: 0     Isr: 0</p>
+<p>列出了lx_test_topic的parition数量、replica因子以及每个partition的leader、replica信息</p>
+<p>3，查看consumer group列表，使用–list参数</p>
+<p>查看consumer group列表有新、旧两种命令，分别查看新版(信息保存在broker中)consumer列表和老版(信息保存在zookeeper中)consumer列表，因而需要区分指定bootstrap–server和zookeeper参数：</p>
+<p>bin&#x2F;kafka-consumer-groups.sh –new-consumer –bootstrap-server 127.0.0.1:9292 –list<br>lx_test</p>
+<p>bin&#x2F;kafka-consumer-groups.sh –zookeeper 127.0.0.1:2181 –list<br>console-consumer-86845<br>console-consumer-11967</p>
+<p>4，查看特定consumer group 详情，使用–group与–describe参数</p>
+<p>同样根据新&#x2F;旧版本的consumer，分别指定bootstrap-server与zookeeper参数:</p>
+<p>bin&#x2F;kafka-consumer-groups.sh –new-consumer –bootstrap-server 127.0.0.1:9292 –group lx_test –describe<br>GROUP                          TOPIC                          PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             OWNER<br>lx_test                        lx_test_topic             0          465             465             0               kafka-python-1.3.1_&#x2F;127.0.0.1</p>
+<p>bin&#x2F;kafka-consumer-groups.sh –zookeeper 127.0.0.1:2181 –group console-consumer-11967 –describe<br>GROUP                          TOPIC                          PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             OWNER<br>Could not fetch offset from zookeeper for group console-consumer-11967 partition [lx_test_topic,0] due to missing offset data in zookeeper.<br>console-consumer-11967         lx_test_topic             0          unknown         465             unknown         console-consumer-11967_aws-lx-1513787888172-d3a91f05-0</p>
+<p>其中依次展示group名称、消费的topic名称、partition id、consumer group最后一次提交的offset、最后提交的生产消息offset、消费offset与生产offset之间的差值、当前消费topic-partition的group成员id(不一定包含hostname)</p>
+<p>上面示例中console-consumer-11967是为了测试临时起的一个console consumer，缺少在zookeeper中保存的current_offset信息。</p>
+<p>5.设置为最初偏移量：</p>
+<p>[root@snn bin]#.&#x2F;kafka-consumer-groups.sh –bootstrap-server snn:6667 –group offsettest –topic offset-test –reset-offsets –to-earliest –execute</p>
+<p>重新读取数据:</p>
+<p>6.设置任意偏移量：</p>
+<p>[root@snn bin]# .&#x2F;kafka-consumer-groups.sh –bootstrap-server snn:6667 –group offsettest –topic offset-test –reset-offsets –to-offset 3 –execute</p>
+<p>7.设置最近偏移量</p>
+<p>[root@snn bin]# .&#x2F;kafka-consumer-groups.sh –bootstrap-server snn:6667 –group offsettest –topic offset-test –reset-offsets –to-latest –execute</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2024/08/08/Kafka%E7%9B%B8%E5%85%B3%E5%91%BD%E4%BB%A4/" data-id="clznsccn50003okukb48vf32o" data-title="" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
   
     <article id="post-Spark面对OOM问题的解决方法及优化总结" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
@@ -130,7 +330,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2021/06/11/Spark%E9%9D%A2%E5%AF%B9OOM%E9%97%AE%E9%A2%98%E7%9A%84%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95%E5%8F%8A%E4%BC%98%E5%8C%96%E6%80%BB%E7%BB%93/" data-id="clzcp8okb0001louk6ddrgux6" data-title="Spark面对OOM问题的解决方法及优化总结" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      <a data-url="http://example.com/2021/06/11/Spark%E9%9D%A2%E5%AF%B9OOM%E9%97%AE%E9%A2%98%E7%9A%84%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95%E5%8F%8A%E4%BC%98%E5%8C%96%E6%80%BB%E7%BB%93/" data-id="clznsccmy0000okukcgj9cdoc" data-title="Spark面对OOM问题的解决方法及优化总结" class="article-share-link"><span class="fa fa-share">Share</span></a>
       
       
       
@@ -181,7 +381,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2021/05/21/index/" data-id="clzcp8ok80000louk4y2k2v5j" data-title="index" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      <a data-url="http://example.com/2021/05/21/index/" data-id="clznsccn10001okuk6orqaf9t" data-title="index" class="article-share-link"><span class="fa fa-share">Share</span></a>
       
       
       
@@ -211,7 +411,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">June 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">May 2021</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2024/08/">August 2024</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/06/">June 2021</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2021/05/">May 2021</a></li></ul>
     </div>
   </div>
 
@@ -222,6 +422,14 @@
     <h3 class="widget-title">Recent Posts</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2024/08/08/kafka%E8%87%AA%E5%8A%A8%E5%88%9B%E5%BB%BA%E8%AE%BE%E7%BD%AE/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/2024/08/08/Kafka%E7%9B%B8%E5%85%B3%E5%91%BD%E4%BB%A4/">(no title)</a>
+          </li>
         
           <li>
             <a href="/2021/06/11/Spark%E9%9D%A2%E5%AF%B9OOM%E9%97%AE%E9%A2%98%E7%9A%84%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95%E5%8F%8A%E4%BC%98%E5%8C%96%E6%80%BB%E7%BB%93/">Spark面对OOM问题的解决方法及优化总结</a>
