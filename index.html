@@ -91,12 +91,11 @@
     
     <div class="e-content article-entry" itemprop="articleBody">
       
-        <p>##Kafka基础命令<br>说明：命令行参数中–zookeeper是2.2以前的版本，2.2之后使用–bootstrap-server</p>
+        <h2 id="Kafka基础命令"><a href="#Kafka基础命令" class="headerlink" title="Kafka基础命令"></a>Kafka基础命令</h2><p>说明：命令行参数中–zookeeper是2.2以前的版本，2.2之后使用–bootstrap-server</p>
 <h3 id="检查端口号"><a href="#检查端口号" class="headerlink" title="检查端口号"></a>检查端口号</h3><pre><code>ps -ef | grep kafka 
 netstat -tunlp|grep &quot;(2181|9092)&quot;
 </code></pre>
-<h3 id="topic相关"><a href="#topic相关" class="headerlink" title="topic相关"></a>topic相关</h3><p>###创建</p>
-<pre><code>bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 3 --topic TEST_TOPIC
+<h2 id="topic相关"><a href="#topic相关" class="headerlink" title="topic相关"></a>topic相关</h2><h3 id="创建"><a href="#创建" class="headerlink" title="创建"></a>创建</h3><pre><code>bin/kafka-topics.sh --create --bootstrap-server localhost:9092 --replication-factor 1 --partitions 3 --topic TEST_TOPIC
 </code></pre>
 <h3 id="查看topic列表"><a href="#查看topic列表" class="headerlink" title="查看topic列表"></a>查看topic列表</h3><pre><code>bin/kafka-topics.sh --list --bootstrap-server localhost:9092
 </code></pre>
@@ -104,94 +103,81 @@ netstat -tunlp|grep &quot;(2181|9092)&quot;
 <p>上述有的版本bootstrap-server要改成zookeeper 2181用</p>
 <h3 id="查看某个topic信息"><a href="#查看某个topic信息" class="headerlink" title="查看某个topic信息"></a>查看某个topic信息</h3><pre><code>bin/kafka-topics.sh --describe --bootstrap-server localhost:9092 --topic TEST_TOPIC
 </code></pre>
-<p>4、修改某个topic的partition个数(分区只能增不能减)</p>
-<blockquote>
+<h3 id="修改某个topic的partition个数-分区只能增不能减"><a href="#修改某个topic的partition个数-分区只能增不能减" class="headerlink" title="修改某个topic的partition个数(分区只能增不能减)"></a>修改某个topic的partition个数(分区只能增不能减)</h3><blockquote>
 <p>bin&#x2F;kafka-topics.sh –bootstrap-server localhost:2181 –alter –topic TEST_TOPIC –partitions 10</p>
 </blockquote>
-<p>5、删除某个topic(只会删除zookeeper内的元数据，消息文件需要手动删除)</p>
-<p>如果启动时server.properties没有配置delete.topic.enable&#x3D;true，此时删除只是把topic标记为：marked for deletion，日志数据（log.dirs配置的位置）并未删除</p>
-<blockquote>
-<p>bin&#x2F;kafka-topics.sh –bootstrap-server localhost:2181  –topic TEST_TOPIC –delete</p>
-</blockquote>
-<pre><code>producer相关
+<h3 id="删除某个topic-只会删除zookeeper内的元数据，消息文件需要手动删除"><a href="#删除某个topic-只会删除zookeeper内的元数据，消息文件需要手动删除" class="headerlink" title="删除某个topic(只会删除zookeeper内的元数据，消息文件需要手动删除)"></a>删除某个topic(只会删除zookeeper内的元数据，消息文件需要手动删除)</h3><p>如果启动时server.properties没有配置delete.topic.enable&#x3D;true，此时删除只是把topic标记为：marked for deletion，日志数据（log.dirs配置的位置）并未删除</p>
+<pre><code> bin/kafka-topics.sh --bootstrap-server localhost:2181  --topic TEST_TOPIC --delete
 </code></pre>
-<p>一般用来做测试，命令行和文件都支持</p>
-<blockquote>
-<p>bin&#x2F;kafka-console-producer –broker-list localhost:9092 –topic test<br>This is a message 哈哈哈哈哈哈哈</p>
-</blockquote>
+<h2 id="producer相关"><a href="#producer相关" class="headerlink" title="producer相关"></a>producer相关</h2><p>一般用来做测试，命令行和文件都支持</p>
+<pre><code>bin/kafka-console-producer --broker-list localhost:9092 --topic test
+&gt;我是一条测试消息
+</code></pre>
 <p>预研测试的时候经常读文件更方便：</p>
-<p>cat data001.txt |  kafka-console-producer –broker-list localhost:9092 –topic test_data001 | &gt; out001.txt</p>
+<pre><code>cat data001.txt |  kafka-console-producer --broker-list localhost:9092 --topic test_data001 | &gt; out001.txt
+</code></pre>
 <p>附：wc -l data.txt查看文件行数</p>
-<pre><code>consumer相关
+<h2 id="consumer相关"><a href="#consumer相关" class="headerlink" title="consumer相关"></a>consumer相关</h2><h3 id="查看所有消费者组"><a href="#查看所有消费者组" class="headerlink" title="查看所有消费者组"></a>查看所有消费者组</h3><pre><code> bin/kafka-consumer-groups --bootstrap-server localhost:9092 --list
 </code></pre>
-<p>1、查看所有消费者组</p>
-<blockquote>
-<p>bin&#x2F;kafka-consumer-groups –bootstrap-server localhost:9092 –list</p>
-</blockquote>
-<p>2、查看指定group（group01）的消费情况</p>
-<blockquote>
-<p>bin&#x2F;kafka-consumer-groups –describe –group group01 –bootstrap-server localhost:9092</p>
-</blockquote>
-<pre><code>console相关
+<h3 id="查看指定group（group01）的消费情况"><a href="#查看指定group（group01）的消费情况" class="headerlink" title="查看指定group（group01）的消费情况"></a>查看指定group（group01）的消费情况</h3><pre><code> bin/kafka-consumer-groups --describe --group group01 --bootstrap-server localhost:9092
 </code></pre>
-<p>1、生产数据</p>
-<blockquote>
-<p>bin&#x2F;kafka-console-producer –broker-list localhost:9092 –topic TEST_TOPIC</p>
-</blockquote>
-<p>2、消费数据</p>
-<blockquote>
-<p>bin&#x2F;kafka-console-consumer –bootstrap-server localhost:9092 –from-beginning –topic TEST_TOPIC</p>
-</blockquote>
-<pre><code>其他
+<h2 id="console相关"><a href="#console相关" class="headerlink" title="console相关"></a>console相关</h2><h3 id="生产数据"><a href="#生产数据" class="headerlink" title="生产数据"></a>生产数据</h3><pre><code> bin/kafka-console-producer --broker-list localhost:9092 --topic TEST_TOPIC
 </code></pre>
-<p>1、重置指定topic的offset</p>
-<p>背景，因为程序写的不够好，辛苦造了2亿多数据跑入库测性能，跑到中间数据库服务器撑爆了，结果都写进日志了。。。<br>复制代码</p>
-<blockquote>
-<p>bin&#x2F;kafka-consumer-groups –bootstrap-server localhost:9092 –group group_test –reset-offsets -to-offset 97000000 –topic TEST_TOPIC –execute</p>
-</blockquote>
-<p>Other supported arguments:</p>
-<p>–shift-by [positive or negative integer] - Shifts offset forward or backward from given integer.往前或往后加减offset</p>
-<p>–to-current and –to-latest are same as –to-offset [integer] and –to-earliest.</p>
-<p>–to-datetime [Datetime format is yyyy-MM-ddTHH:mm:ss.xxx]</p>
-<blockquote>
-<p>bin&#x2F;kafka-consumer-groups –bootstrap-server localhost:9092 –group group_test –reset-offsets –to-datetime 2017-08-04T00:00:00.000 [ –all-topics or –topic <topic-name> ] –execute</p>
-</blockquote>
+<h3 id="消费数据"><a href="#消费数据" class="headerlink" title="消费数据"></a>消费数据</h3><pre><code> bin/kafka-console-consumer --bootstrap-server localhost:9092 --from-beginning --topic TEST_TOPIC
+</code></pre>
+<h2 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h2><h3 id="重置指定topic的offset"><a href="#重置指定topic的offset" class="headerlink" title="重置指定topic的offset"></a>重置指定topic的offset</h3><p>新闻数据有脏数据导致Kafka Connect执行错误，需要跳过脏数据</p>
+<pre><code> bin/kafka-consumer-groups --bootstrap-server localhost:9092 --group group_test --reset-offsets -to-offset 97000000 --topic TEST_TOPIC --execute
+
+Other supported arguments:
+--shift-by [positive or negative integer] - Shifts offset forward or backward from given integer.往前或往后加减offset
+--to-current and --to-latest are same as --to-offset [integer] and --to-earliest.
+--to-datetime [Datetime format is yyyy-MM-ddTHH:mm:ss.xxx]
+ bin/kafka-consumer-groups --bootstrap-server localhost:9092 --group group_test --reset-offsets --to-datetime 2017-08-04T00:00:00.000 [ --all-topics or --topic &lt;topic-name&gt; ] --execute
+</code></pre>
 <p>how to validata:</p>
-<blockquote>
-<p>bin&#x2F;kafka-consumer-groups –bootstrap-server locahost:9092 –group <group_id> –describe<br>复制代码</p>
-</blockquote>
+<pre><code> bin/kafka-consumer-groups --bootstrap-server locahost:9092 --group &lt;group_id&gt; --describe
+</code></pre>
 <p>注意：这里重置的offset是针对每个partition而言，重置offset之前，所有的consumer必须是inactive的，也就是应用消费必须暂停</p>
-<p> Kafka查看topic、consumer group状态命令</p>
-<p>最近工作中遇到需要使用kafka的场景，测试消费程序启动后，要莫名的过几十秒乃至几分钟才能成功获取到到topic的partition和offset，而后开始消费数据，于是学习了一下查看kafka broker里topic和consumer group状态的相关命令，这里记录一下。</p>
-<p>命令参考自《Kafka: The Definitive Guide》 Chapter 9 Administrating Kafka</p>
+<h2 id="Kafka查看topic、consumer-group状态命令"><a href="#Kafka查看topic、consumer-group状态命令" class="headerlink" title="Kafka查看topic、consumer group状态命令"></a>Kafka查看topic、consumer group状态命令</h2><p>最近工作中遇到需要使用kafka的场景，测试消费程序启动后，要莫名的过几十秒乃至几分钟才能成功获取到到topic的partition和offset，而后开始消费数据，于是学习了一下查看kafka broker里topic和consumer group状态的相关命令，这里记录一下。</p>
 <p>以下命令中使用的zookeeper配置地址为127.0.0.1:2181，bootstrap–server(即broker)地址为: 127.0.0.1:9292</p>
-<p>1，查看kafka topic列表，使用–list参数</p>
-<p>bin&#x2F;kafka-topics.sh –zookeeper 127.0.0.1:2181 –list<br>__consumer_offsets<br>lx_test_topic<br>test</p>
-<p>2，查看kafka特定topic的详情，使用–topic与–describe参数</p>
-<p>bin&#x2F;kafka-topics.sh –zookeeper 127.0.0.1:2181 –topic lx_test_topic –describe<br>Topic:lx_test_topic     PartitionCount:1        ReplicationFactor:1     Configs:<br>        Topic: lx_test_topic    Partition: 0    Leader: 0       Replicas: 0     Isr: 0</p>
-<p>列出了lx_test_topic的parition数量、replica因子以及每个partition的leader、replica信息</p>
-<p>3，查看consumer group列表，使用–list参数</p>
-<p>查看consumer group列表有新、旧两种命令，分别查看新版(信息保存在broker中)consumer列表和老版(信息保存在zookeeper中)consumer列表，因而需要区分指定bootstrap–server和zookeeper参数：</p>
-<p>bin&#x2F;kafka-consumer-groups.sh –new-consumer –bootstrap-server 127.0.0.1:9292 –list<br>lx_test</p>
-<p>bin&#x2F;kafka-consumer-groups.sh –zookeeper 127.0.0.1:2181 –list<br>console-consumer-86845<br>console-consumer-11967</p>
-<p>4，查看特定consumer group 详情，使用–group与–describe参数</p>
-<p>同样根据新&#x2F;旧版本的consumer，分别指定bootstrap-server与zookeeper参数:</p>
-<p>bin&#x2F;kafka-consumer-groups.sh –new-consumer –bootstrap-server 127.0.0.1:9292 –group lx_test –describe<br>GROUP                          TOPIC                          PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             OWNER<br>lx_test                        lx_test_topic             0          465             465             0               kafka-python-1.3.1_&#x2F;127.0.0.1</p>
-<p>bin&#x2F;kafka-consumer-groups.sh –zookeeper 127.0.0.1:2181 –group console-consumer-11967 –describe<br>GROUP                          TOPIC                          PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             OWNER<br>Could not fetch offset from zookeeper for group console-consumer-11967 partition [lx_test_topic,0] due to missing offset data in zookeeper.<br>console-consumer-11967         lx_test_topic             0          unknown         465             unknown         console-consumer-11967_aws-lx-1513787888172-d3a91f05-0</p>
+<h3 id="查看kafka-topic列表，使用–list参数"><a href="#查看kafka-topic列表，使用–list参数" class="headerlink" title="查看kafka topic列表，使用–list参数"></a>查看kafka topic列表，使用–list参数</h3><pre><code>bin/kafka-topics.sh --zookeeper 127.0.0.1:2181 --list
+__consumer_offsets
+test_topic
+test
+</code></pre>
+<h3 id="查看kafka特定topic的详情，使用–topic与–describe参数"><a href="#查看kafka特定topic的详情，使用–topic与–describe参数" class="headerlink" title="查看kafka特定topic的详情，使用–topic与–describe参数"></a>查看kafka特定topic的详情，使用–topic与–describe参数</h3><pre><code>bin/kafka-topics.sh --zookeeper 127.0.0.1:2181 --topic test_topic --describe
+Topic:test_topic    PartitionCount:1        ReplicationFactor:1     Configs:
+Topic:test_topic    Partition: 0    Leader: 0       Replicas: 0     Isr: 0
+</code></pre>
+<p>列出了test_topic的parition数量、replica因子以及每个partition的leader、replica信息</p>
+<h3 id="查看consumer-group列表，使用–list参数"><a href="#查看consumer-group列表，使用–list参数" class="headerlink" title="查看consumer group列表，使用–list参数"></a>查看consumer group列表，使用–list参数</h3><p>查看consumer group列表有新、旧两种命令，分别查看新版(信息保存在broker中)consumer列表和老版(信息保存在zookeeper中)consumer列表，因而需要区分指定bootstrap–server和zookeeper参数：</p>
+<pre><code>bin/kafka-consumer-groups.sh --new-consumer --bootstrap-server 127.0.0.1:9292 --list
+lx_test
+
+bin/kafka-consumer-groups.sh --zookeeper 127.0.0.1:2181 --list
+console-consumer-86845
+console-consumer-11967
+</code></pre>
+<h3 id="查看特定consumer-group-详情，使用–group与–describe参数"><a href="#查看特定consumer-group-详情，使用–group与–describe参数" class="headerlink" title="查看特定consumer group 详情，使用–group与–describe参数"></a>查看特定consumer group 详情，使用–group与–describe参数</h3><p>同样根据新&#x2F;旧版本的consumer，分别指定bootstrap-server与zookeeper参数:</p>
+<pre><code>bin/kafka-consumer-groups.sh --new-consumer --bootstrap-server 127.0.0.1:9292 --group lx_test --describe
+bin/kafka-consumer-groups.sh --zookeeper 127.0.0.1:2181 --group console-consumer-11967 --describe
+GROUP                          TOPIC                          PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             OWNER
+Could not fetch offset from zookeeper for group console-consumer-11967 partition [test_topic,0] due to missing offset data in zookeeper.
+console-consumer-11967         test_topic             0          unknown         465             unknown         console-consumer-11967_aws-lx-1513787888172-d3a91f05-0
+</code></pre>
 <p>其中依次展示group名称、消费的topic名称、partition id、consumer group最后一次提交的offset、最后提交的生产消息offset、消费offset与生产offset之间的差值、当前消费topic-partition的group成员id(不一定包含hostname)</p>
 <p>上面示例中console-consumer-11967是为了测试临时起的一个console consumer，缺少在zookeeper中保存的current_offset信息。</p>
-<p>5.设置为最初偏移量：</p>
-<p>[root@snn bin]#.&#x2F;kafka-consumer-groups.sh –bootstrap-server snn:6667 –group offsettest –topic offset-test –reset-offsets –to-earliest –execute</p>
-<p>重新读取数据:</p>
-<p>6.设置任意偏移量：</p>
-<p>[root@snn bin]# .&#x2F;kafka-consumer-groups.sh –bootstrap-server snn:6667 –group offsettest –topic offset-test –reset-offsets –to-offset 3 –execute</p>
-<p>7.设置最近偏移量</p>
-<p>[root@snn bin]# .&#x2F;kafka-consumer-groups.sh –bootstrap-server snn:6667 –group offsettest –topic offset-test –reset-offsets –to-latest –execute</p>
+<h2 id="设置为最初偏移量："><a href="#设置为最初偏移量：" class="headerlink" title="设置为最初偏移量："></a>设置为最初偏移量：</h2><pre><code>./kafka-consumer-groups.sh --bootstrap-server snn:6667 --group offsettest --topic offset-test --reset-offsets --to-earliest –execute
+</code></pre>
+<h2 id="设置任意偏移量："><a href="#设置任意偏移量：" class="headerlink" title="设置任意偏移量："></a>设置任意偏移量：</h2><pre><code>./kafka-consumer-groups.sh --bootstrap-server snn:6667 --group offsettest --topic offset-test --reset-offsets --to-offset 3 –execute
+</code></pre>
+<h2 id="设置最近偏移量"><a href="#设置最近偏移量" class="headerlink" title="设置最近偏移量"></a>设置最近偏移量</h2><pre><code>./kafka-consumer-groups.sh --bootstrap-server snn:6667 --group offsettest --topic offset-test --reset-offsets --to-latest --execute
+</code></pre>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2022/08/11/Kafka%E7%9B%B8%E5%85%B3%E5%91%BD%E4%BB%A4/" data-id="clznslhts0000w0uk09fhfm4u" data-title="Kafka相关命令" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      <a data-url="http://example.com/2022/08/11/Kafka%E7%9B%B8%E5%85%B3%E5%91%BD%E4%BB%A4/" data-id="clznt5fts0001icuk9ann9g0q" data-title="Kafka相关命令" class="article-share-link"><span class="fa fa-share">Share</span></a>
       
       
       
@@ -267,7 +253,7 @@ netstat -tunlp|grep &quot;(2181|9092)&quot;
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2022/08/10/kafka%E8%87%AA%E5%8A%A8%E5%88%9B%E5%BB%BATopic%E8%AE%BE%E7%BD%AE/" data-id="clznslhtv0001w0uk4em6cqv1" data-title="" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      <a data-url="http://example.com/2022/08/10/kafka%E8%87%AA%E5%8A%A8%E5%88%9B%E5%BB%BATopic%E8%AE%BE%E7%BD%AE/" data-id="clznt5ftp0000icuk24w68xt5" data-title="" class="article-share-link"><span class="fa fa-share">Share</span></a>
       
       
       
@@ -340,7 +326,7 @@ netstat -tunlp|grep &quot;(2181|9092)&quot;
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2021/06/11/Spark%E9%9D%A2%E5%AF%B9OOM%E9%97%AE%E9%A2%98%E7%9A%84%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95%E5%8F%8A%E4%BC%98%E5%8C%96%E6%80%BB%E7%BB%93/" data-id="clznslhtw0002w0ukfh1fap1l" data-title="Spark面对OOM问题的解决方法及优化总结" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      <a data-url="http://example.com/2021/06/11/Spark%E9%9D%A2%E5%AF%B9OOM%E9%97%AE%E9%A2%98%E7%9A%84%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95%E5%8F%8A%E4%BC%98%E5%8C%96%E6%80%BB%E7%BB%93/" data-id="clznt5ftt0002icuk1jbcfqyb" data-title="Spark面对OOM问题的解决方法及优化总结" class="article-share-link"><span class="fa fa-share">Share</span></a>
       
       
       
