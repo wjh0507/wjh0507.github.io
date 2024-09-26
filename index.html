@@ -96,8 +96,7 @@
 <p>线程是进程的子集，一个进程可以有很多线程，每条线程并行执行不同的任务。</p>
 <p>不同的进程使用不同的内存空间，而所有的线程共享一片相同的内存空间。</p>
 <p>每个线程都拥有单独的栈内存用来存储本地数据。</p>
-<h3 id="如何在Java中实现线程？"><a href="#如何在Java中实现线程？" class="headerlink" title="如何在Java中实现线程？###"></a>如何在Java中实现线程？###</h3><p>####（1）.继承Thread类实现多线程 ####</p>
-<p>继承Thread类,然后重写run方法.（由于Java单继承的特性，这种方式用的比较少）</p>
+<h3 id="如何在Java中实现线程？"><a href="#如何在Java中实现线程？" class="headerlink" title="如何在Java中实现线程？"></a>如何在Java中实现线程？</h3><h4 id="（1）-继承Thread类实现多线程"><a href="#（1）-继承Thread类实现多线程" class="headerlink" title="（1）.继承Thread类实现多线程"></a>（1）.继承Thread类实现多线程</h4><p>继承Thread类,然后重写run方法.（由于Java单继承的特性，这种方式用的比较少）</p>
 <pre><code>public class MyThread extends Thread &#123;
 public MyThread() &#123;
     
@@ -117,8 +116,7 @@ public static void main(String[] args) &#123;
 &#125;
 &#125;
 </code></pre>
-<p>####（2）.实现Runnable()接口定制执行目标（target）类，实现其run()方法 ####</p>
-<p>推荐此方式。两个特点：</p>
+<h4 id="（2）-实现Runnable-接口定制执行目标（target）类，实现其run-方法"><a href="#（2）-实现Runnable-接口定制执行目标（target）类，实现其run-方法" class="headerlink" title="（2）.实现Runnable()接口定制执行目标（target）类，实现其run()方法"></a>（2）.实现Runnable()接口定制执行目标（target）类，实现其run()方法</h4><p>推荐此方式。两个特点：</p>
 <p> a.覆写Runnable接口实现多线程可以避免单继承局限<br> b.实现Runnable()可以更好的体现共享的概念<br> c.当执行目标类实现Runnable接口，此时执行目标（target）类和Thread是代理模式（子类负责真是业务的操作，thread负责资源调度与线程创建辅助真实业务。</p>
 <pre><code>public class MyTarget implements Runnable&#123;
 public static int count=20;
@@ -145,7 +143,7 @@ public static void main(String[] args) &#123;
 </code></pre>
 <h4 id="（3）-通过线程池创建多线程"><a href="#（3）-通过线程池创建多线程" class="headerlink" title="（3）.通过线程池创建多线程"></a>（3）.通过线程池创建多线程</h4><p>JAVA中创建线程池主要有两类方法，一类是通过Executors工厂类提供的方法，该类提供了4种不同的线程池可供使用。另一类是通过ThreadPoolExecutor类进行自定义创建。<br>但是不建议使用 Executors静态工厂构建线程池（ <a target="_blank" rel="noopener" href="https://alibaba.github.io/p3c/%E7%BC%96%E7%A8%8B%E8%A7%84%E7%BA%A6/%E5%B9%B6%E5%8F%91%E5%A4%84%E7%90%86.html">此事在《阿里巴巴Java开发手册》里亦有记载</a>  </p>
 <p>说明：Executors返回的线程池对象的弊端如下：<br>1：FixedThreadPool 和 SingleThreadPool：<br>允许的请求队列（底层实现是LinkedBlockingQueue）长度为Integer.MAX_VALUE，可能会堆积大量的请求，从而导致OOM<br>2：CachedThreadPool 和 ScheduledThreadPool 允许的创建线程数量为Integer.MAX_VALUE，可能会创建大量的线程，从而导致OOM。  </p>
-<h5 id="一、通过ThreadPoolExecutor类自定义。"><a href="#一、通过ThreadPoolExecutor类自定义。" class="headerlink" title="一、通过ThreadPoolExecutor类自定义。#####"></a>一、通过ThreadPoolExecutor类自定义。#####</h5><p>　　ThreadPoolExecutor类提供了4种构造方法，可根据需要来自定义一个线程池。</p>
+<h5 id="一、通过ThreadPoolExecutor类自定义。"><a href="#一、通过ThreadPoolExecutor类自定义。" class="headerlink" title="一、通过ThreadPoolExecutor类自定义。"></a>一、通过ThreadPoolExecutor类自定义。</h5><p>　　ThreadPoolExecutor类提供了4种构造方法，可根据需要来自定义一个线程池。</p>
 <pre><code>public ThreadPoolExecutor(int corePoolSize,
                           int maximumPoolSize,
                           long keepAliveTime,
@@ -265,7 +263,20 @@ public static void main(String[] args) &#123;
 12     &#125;
 </code></pre>
 <p>　　因为初始线程池没有线程，而线程不足会不断新建线程，所以线程名都是不一样的。</p>
-<h6 id="2-newFixedThreadPool"><a href="#2-newFixedThreadPool" class="headerlink" title="(2) newFixedThreadPool"></a>(2) newFixedThreadPool</h6><p>创建一个固定大小的线程池，可控制并发的线程数，超出的线程会在队列中等待。<br>代码例子：<br>    1     private static void createFixedThreadPool() {<br>    2         ExecutorService executorService &#x3D; Executors.newFixedThreadPool(3);<br>    3         for (int i &#x3D; 0; i &lt; 10; i++) {<br>    4             final int index &#x3D; i;<br>    5             executorService.execute(() -&gt; {<br>    6                 &#x2F;&#x2F; 获取线程名称,默认格式:pool-1-thread-1<br>    7                 System.out.println(DateUtil.now() + “ “ + Thread.currentThread().getName() + “ “ + index);<br>    8                 &#x2F;&#x2F; 等待2秒<br>    9                 sleep(2000);<br>    10             });<br>    11         }<br>    12     }  </p>
+<h6 id="2-newFixedThreadPool"><a href="#2-newFixedThreadPool" class="headerlink" title="(2) newFixedThreadPool"></a>(2) newFixedThreadPool</h6><p>创建一个固定大小的线程池，可控制并发的线程数，超出的线程会在队列中等待。<br>代码例子：</p>
+<pre><code>1     private static void createFixedThreadPool() &#123;
+2         ExecutorService executorService = Executors.newFixedThreadPool(3);
+3         for (int i = 0; i &lt; 10; i++) &#123;
+4             final int index = i;
+5             executorService.execute(() -&gt; &#123;
+6                 // 获取线程名称,默认格式:pool-1-thread-1
+7                 System.out.println(DateUtil.now() + &quot; &quot; + Thread.currentThread().getName() + &quot; &quot; + index);
+8                 // 等待2秒
+9                 sleep(2000);
+10             &#125;);
+11         &#125;
+12     &#125;  
+</code></pre>
 <p>　　因为线程池大小是固定的，这里设置的是3个线程，所以线程名只有3个。因为线程不足会进入队列等待线程空闲，所以日志间隔2秒输出。</p>
 <h6 id="3-newScheduledThreadPool"><a href="#3-newScheduledThreadPool" class="headerlink" title="(3) newScheduledThreadPool"></a>(3) newScheduledThreadPool</h6><p>创建一个周期性的线程池，支持定时及周期性执行任务。</p>
 <p>代码例子：</p>
@@ -286,73 +297,80 @@ public static void main(String[] args) &#123;
 <p>　　因为设置了延迟3秒，所以提交后3秒才开始执行任务。因为这里设置核心线程数为3个，而线程不足会进入队列等待线程空闲，所以日志间隔2秒输出。</p>
 <p>注意：这里用的是ScheduledExecutorService类的schedule()方法，不是ExecutorService类的execute()方法。</p>
 <h6 id="4-newSingleThreadExecutor"><a href="#4-newSingleThreadExecutor" class="headerlink" title="(4) newSingleThreadExecutor"></a>(4) newSingleThreadExecutor</h6><p>创建一个单线程的线程池，可保证所有任务按照指定顺序(FIFO, LIFO, 优先级)执行。</p>
-<p>代码例子：<br>    1     private static void createSingleThreadPool() {<br>    2         ExecutorService executorService &#x3D; Executors.newSingleThreadExecutor();<br>    3         for (int i &#x3D; 0; i &lt; 10; i++) {<br>    4             final int index &#x3D; i;<br>    5             executorService.execute(() -&gt; {<br>    6                 &#x2F;&#x2F; 获取线程名称,默认格式:pool-1-thread-1<br>    7                 System.out.println(DateUtil.now() + “ “ + Thread.currentThread().getName() + “ “ + index);<br>    8                 &#x2F;&#x2F; 等待2秒<br>    9                 sleep(2000);<br>    10             });<br>    11         }<br>    12     }</p>
+<p>代码例子：</p>
+<pre><code>1     private static void createSingleThreadPool() &#123;
+2         ExecutorService executorService = Executors.newSingleThreadExecutor();
+3         for (int i = 0; i &lt; 10; i++) &#123;
+4             final int index = i;
+5             executorService.execute(() -&gt; &#123;
+6                 // 获取线程名称,默认格式:pool-1-thread-1
+7                 System.out.println(DateUtil.now() + &quot; &quot; + Thread.currentThread().getName() + &quot; &quot; + index);
+8                 // 等待2秒
+9                 sleep(2000);
+10             &#125;);
+11         &#125;
+12     &#125;
+</code></pre>
 <p>　　因为只有一个线程，所以线程名均相同，且是每隔2秒按顺序输出的。</p>
-<h3 id="继承Thread类或者实现Runnable接口来创建线程，有何区别？"><a href="#继承Thread类或者实现Runnable接口来创建线程，有何区别？" class="headerlink" title="继承Thread类或者实现Runnable接口来创建线程，有何区别？###"></a>继承Thread类或者实现Runnable接口来创建线程，有何区别？###</h3><p>  Java不支持类的多重继承，但允许你调用多个接口。所以如果你要继承其他类，当然是调用Runnable接口好了。<br>  a.覆写Runnable接口实现多线程可以避免单继承局限<br>  b.实现Runnable()可以更好的体现共享的概念  </p>
+<h3 id="继承Thread类或者实现Runnable接口来创建线程，有何区别？"><a href="#继承Thread类或者实现Runnable接口来创建线程，有何区别？" class="headerlink" title="继承Thread类或者实现Runnable接口来创建线程，有何区别？"></a>继承Thread类或者实现Runnable接口来创建线程，有何区别？</h3><p>  Java不支持类的多重继承，但允许你调用多个接口。所以如果你要继承其他类，当然是调用Runnable接口好了。<br>  a.覆写Runnable接口实现多线程可以避免单继承局限<br>  b.实现Runnable()可以更好的体现共享的概念  </p>
 <h3 id="Thread-类中的start-和-run-方法有什么区别？"><a href="#Thread-类中的start-和-run-方法有什么区别？" class="headerlink" title="Thread 类中的start() 和 run() 方法有什么区别？"></a>Thread 类中的start() 和 run() 方法有什么区别？</h3><p>start()方法被用来启动新创建的线程，使该被创建的线程状态变为可运行状态。<br>当你直接调用run()方法的时候，只会是在原来的线程中调用，没有新的线程启动。只有调用start()方法才会启动新线程。</p>
 <p>如果我们调用了Thread的run()方法，它的行为就会和普通的方法一样，直接运行run（）方法。为了在新的线程中执行我们的代码，必须使用Thread.start()方法。</p>
-<h3 id="Java中Runnable和Callable有什么不同？"><a href="#Java中Runnable和Callable有什么不同？" class="headerlink" title="Java中Runnable和Callable有什么不同？###"></a>Java中Runnable和Callable有什么不同？###</h3><p>Runnable和Callable都代表那些要在不同的线程中执行的任务目标target。</p>
+<h3 id="Java中Runnable和Callable有什么不同？"><a href="#Java中Runnable和Callable有什么不同？" class="headerlink" title="Java中Runnable和Callable有什么不同？"></a>Java中Runnable和Callable有什么不同？</h3><p>Runnable和Callable都代表那些要在不同的线程中执行的任务目标target。</p>
 <p>Runnable从JDK1.0开始就有了，Callable是在JDK1.5增加的。它们的主要区别是Callable的 call() 方法可以返回值和抛出异常，而Runnable的run()方法没有这些功能。  </p>
-<h3 id="线程的常用方法有哪些"><a href="#线程的常用方法有哪些" class="headerlink" title="线程的常用方法有哪些"></a>线程的常用方法有哪些</h3><ol>
-<li><pre><code>Thread.sleep(long millis)，一定是当前线程调用此方法，当前线程进入TIMED_WAITING状态，但不释放对象锁，millis后线程自动苏醒进入就绪状态。作用：给其它线程执行机会的最佳方式。  
-</code></pre>
-</li>
-<li><pre><code>Thread.yield()，一定是当前线程调用此方法，当前线程放弃获取的CPU时间片，但不释放锁资源，由运行状态变为就绪状态，让OS再次选择线程。作用：让相同优先级的线程轮流执行，但并不保证一定会轮流执行。实际中无法保证yield()达到让步目的，因为让步的线程还有可能被线程调度程序再次选中。Thread.yield()不会导致阻塞。该方法与sleep()类似，只是不能由用户指定暂停多长时间。  
-</code></pre>
-</li>
-<li><pre><code>thread.join()/thread.join(long millis)，当前线程里调用其它线程t的join方法，当前线程进入WAITING/TIMED_WAITING状态，当前线程不会释放已经持有的对象锁。线程t执行完毕或者millis时间到，当前线程一般情况下进入RUNNABLE状态，也有可能进入BLOCKED状态（因为join是基于wait实现的）。  
-</code></pre>
-</li>
-<li><pre><code>obj.wait()，当前线程调用对象的wait()方法，当前线程释放对象锁，进入等待队列。依靠notify()/notifyAll()唤醒或者wait(long timeout) timeout时间到自动唤醒。  
-</code></pre>
-</li>
-<li><pre><code>obj.notify()唤醒在此对象监视器上等待的单个线程，选择是任意性的。notifyAll()唤醒在此对象监视器上等待的所有线程。  
-</code></pre>
-</li>
-<li><pre><code>LockSupport.park()/LockSupport.parkNanos(long nanos),LockSupport.parkUntil(long deadlines), 当前线程进入WAITING/TIMED_WAITING状态。对比wait方法,不需要获得锁就可以让线程进入WAITING/TIMED_WAITING状态，需要通过LockSupport.unpark(Thread thread)唤醒。
-</code></pre>
-</li>
-</ol>
+<h3 id="线程的常用方法有哪些"><a href="#线程的常用方法有哪些" class="headerlink" title="线程的常用方法有哪些"></a>线程的常用方法有哪些</h3><ul>
+<li>Thread.sleep(long millis)，一定是当前线程调用此方法，当前线程进入TIMED_WAITING状态，但不释放对象锁，millis后线程自动苏醒进入就绪状态。作用：给其它线程执行机会的最佳方式。  </li>
+<li>Thread.yield()，一定是当前线程调用此方法，当前线程放弃获取的CPU时间片，但不释放锁资源，由运行状态变为就绪状态，让OS再次选择线程。作用：让相同优先级的线程轮流执行，但并不保证一定会轮流执行。实际中无法保证yield()达到让步目的，因为让步的线程还有可能被线程调度程序再次选中。Thread.yield()不会导致阻塞。该方法与sleep()类似，只是不能由用户指定暂停多长时间。  </li>
+<li>thread.join()&#x2F;thread.join(long millis)，当前线程里调用其它线程t的join方法，当前线程进入WAITING&#x2F;TIMED_WAITING状态，当前线程不会释放已经持有的对象锁。线程t执行完毕或者millis时间到，当前线程一般情况下进入RUNNABLE状态，也有可能进入BLOCKED状态（因为join是基于wait实现的）。  </li>
+<li>obj.wait()，当前线程调用对象的wait()方法，当前线程释放对象锁，进入等待队列。依靠notify()&#x2F;notifyAll()唤醒或者wait(long timeout) timeout时间到自动唤醒。  </li>
+<li>obj.notify()唤醒在此对象监视器上等待的单个线程，选择是任意性的。notifyAll()唤醒在此对象监视器上等待的所有线程。  </li>
+<li>LockSupport.park()&#x2F;LockSupport.parkNanos(long nanos),LockSupport.parkUntil(long deadlines), 当前线程进入WAITING&#x2F;TIMED_WAITING状态。对比wait方法,不需要获得锁就可以让线程进入WAITING&#x2F;TIMED_WAITING状态，需要通过LockSupport.unpark(Thread thread)唤醒。</li>
+</ul>
 <h3 id="Java内存模型是什么？"><a href="#Java内存模型是什么？" class="headerlink" title="Java内存模型是什么？"></a>Java内存模型是什么？</h3><p>Java内存模型规定和指引Java程序在不同的内存架构、CPU和操作系统间有确定性地行为。它在多线程的情况下尤其重要。Java内存模型对一个线程所做的变动能被其它线程可见提供了保证，它们之间是先行发生关系。这个关系定义了一些规则让程序员在并发编程时思路更清晰。比如，先行发生关系确保了：</p>
-<pre><code>线程内的代码能够按先后顺序执行，这被称为程序次序规则。
-对于同一个锁，一个解锁操作一定要发生在时间上后发生的另一个锁定操作之前，也叫做管程锁定规则。
-前一个对volatile的写操作在后一个volatile的读操作之前，也叫volatile变量规则。
-一个线程内的任何操作必需在这个线程的start()调用之后，也叫作线程启动规则。
-一个线程的所有操作都会在线程终止之前，线程终止规则。
-一个对象的终结操作必需在这个对象构造完成之后，也叫对象终结规则。
-可传递性
-
-强烈建议大家阅读《Java高并发核心编程（卷2）：多线程、锁、JMM、JUC、高并发设计模式》,来加深对Java内存模型的理解。
-</code></pre>
-<h3 id="Java中的volatile-变量是什么？"><a href="#Java中的volatile-变量是什么？" class="headerlink" title="Java中的volatile 变量是什么？###"></a>Java中的volatile 变量是什么？###</h3><p>volatile是一个特殊的修饰符，只有成员变量才能使用它。在Java并发程序缺少同步类的情况下，多线程对成员变量的操作对其它线程是透明的。volatile变量可以保证下一个读取操作会在前一个写操作之后发生。线程都会直接从内存中读取该变量并且不缓存它。这就确保了线程读取到的变量是同内存中是一致的。</p>
-<h3 id="什么是线程安全？Vector是一个线程安全类吗？"><a href="#什么是线程安全？Vector是一个线程安全类吗？" class="headerlink" title="什么是线程安全？Vector是一个线程安全类吗？###"></a>什么是线程安全？Vector是一个线程安全类吗？###</h3><p>如果你的代码所在的进程中有多个线程在同时运行，而这些线程可能会同时运行这段代码。如果每次运行结果和单线程运行的结果是一样的，而且其他的变量的值也和预期的是一样的，就是线程安全的。一个线程安全的计数器类的同一个实例对象在被多个线程使用的情况下也不会出现计算失误。很显然你可以将集合类分成两组，线程安全和非线程安全的。Vector 是用同步方法来实现线程安全的, 而和它相似的ArrayList不是线程安全的。</p>
-<h3 id="Java中如何停止一个线程？"><a href="#Java中如何停止一个线程？" class="headerlink" title="Java中如何停止一个线程？###"></a>Java中如何停止一个线程？###</h3><p>Java提供了很丰富的API但没有为停止线程提供API。JDK 1.0本来有一些像stop(), suspend() 和 resume()的控制方法，但是由于潜在的死锁威胁。因此在后续的JDK版本中他们被弃用了，之后Java API的设计者就没有提供一个兼容且线程安全的方法来停止一个线程。当run() 或者 call() 方法执行完的时候线程会自动结束，如果要手动结束一个线程，可以用volatile 布尔变量来退出run()方法的循环或者是取消任务来中断线程。</p>
-<h3 id="一个线程运行时发生异常会怎样？"><a href="#一个线程运行时发生异常会怎样？" class="headerlink" title="一个线程运行时发生异常会怎样？###"></a>一个线程运行时发生异常会怎样？###</h3><p>如果异常没有被捕获该线程将会停止执行。Thread.UncaughtExceptionHandler是用于处理未捕获异常造成线程突然中断情况的一个内嵌接口。  </p>
+<ul>
+<li>线程内的代码能够按先后顺序执行，这被称为程序次序规则。</li>
+<li>对于同一个锁，一个解锁操作一定要发生在时间上后发生的另一个锁定操作之前，也叫做管程锁定规则。</li>
+<li>前一个对volatile的写操作在后一个volatile的读操作之前，也叫volatile变量规则。</li>
+<li>一个线程内的任何操作必需在这个线程的start()调用之后，也叫作线程启动规则。</li>
+<li>一个线程的所有操作都会在线程终止之前，线程终止规则。</li>
+<li>一个对象的终结操作必需在这个对象构造完成之后，也叫对象终结规则。</li>
+<li>可传递性</li>
+</ul>
+<h3 id="Java中的volatile-变量是什么？"><a href="#Java中的volatile-变量是什么？" class="headerlink" title="Java中的volatile 变量是什么？"></a>Java中的volatile 变量是什么？</h3><p>volatile是一个特殊的修饰符，只有成员变量才能使用它。在Java并发程序缺少同步类的情况下，多线程对成员变量的操作对其它线程是透明的。volatile变量可以保证下一个读取操作会在前一个写操作之后发生。线程都会直接从内存中读取该变量并且不缓存它。这就确保了线程读取到的变量是同内存中是一致的。</p>
+<h3 id="什么是线程安全？Vector是一个线程安全类吗？"><a href="#什么是线程安全？Vector是一个线程安全类吗？" class="headerlink" title="什么是线程安全？Vector是一个线程安全类吗？"></a>什么是线程安全？Vector是一个线程安全类吗？</h3><p>如果你的代码所在的进程中有多个线程在同时运行，而这些线程可能会同时运行这段代码。如果每次运行结果和单线程运行的结果是一样的，而且其他的变量的值也和预期的是一样的，就是线程安全的。一个线程安全的计数器类的同一个实例对象在被多个线程使用的情况下也不会出现计算失误。很显然你可以将集合类分成两组，线程安全和非线程安全的。Vector 是用同步方法来实现线程安全的, 而和它相似的ArrayList不是线程安全的。</p>
+<h3 id="Java中如何停止一个线程？"><a href="#Java中如何停止一个线程？" class="headerlink" title="Java中如何停止一个线程？"></a>Java中如何停止一个线程？</h3><p>Java提供了很丰富的API但没有为停止线程提供API。JDK 1.0本来有一些像stop(), suspend() 和 resume()的控制方法，但是由于潜在的死锁威胁。因此在后续的JDK版本中他们被弃用了，之后Java API的设计者就没有提供一个兼容且线程安全的方法来停止一个线程。当run() 或者 call() 方法执行完的时候线程会自动结束，如果要手动结束一个线程，可以用volatile 布尔变量来退出run()方法的循环或者是取消任务来中断线程。</p>
+<h3 id="一个线程运行时发生异常会怎样？"><a href="#一个线程运行时发生异常会怎样？" class="headerlink" title="一个线程运行时发生异常会怎样？"></a>一个线程运行时发生异常会怎样？</h3><p>如果异常没有被捕获该线程将会停止执行。Thread.UncaughtExceptionHandler是用于处理未捕获异常造成线程突然中断情况的一个内嵌接口。  </p>
 <p>当一个未捕获异常将造成线程中断的时候，JVM会使用Thread.getUncaughtExceptionHandler()来查询线程的UncaughtExceptionHandler并将线程和异常作为参数传递给handler的uncaughtException()方法进行处理。</p>
 <h3 id="什么是FutureTask？"><a href="#什么是FutureTask？" class="headerlink" title="什么是FutureTask？###"></a>什么是FutureTask？###</h3><p>在Java并发程序中FutureTask表示一个可以取消的异步运算。它有启动和取消运算、查询运算是否完成和取回运算结果等方法。只有当运算完成的时候结果才能取回，如果运算尚未完成get方法将会阻塞。一个FutureTask对象可以对调用了Callable和Runnable的对象进行包装，由于FutureTask也是调用了Runnable接口所以它可以提交给Executor来执行。</p>
 <h3 id="Java中堆和栈有什么不同？"><a href="#Java中堆和栈有什么不同？" class="headerlink" title="Java中堆和栈有什么不同？"></a>Java中堆和栈有什么不同？</h3><p>栈是一块和线程紧密相关的内存区域。每个线程都有自己的栈内存，用于存储本地变量，方法参数和栈调用，一个线程中存储的变量对其它线程是不可见的。而堆是所有线程共享的一片公用内存区域。对象都在堆里创建，为了提升效率线程会从堆中弄一个缓存到自己的栈，如果多个线程使用该变量就可能引发问题，这时volatile 变量就可以发挥作用了，它要求线程从主存中读取变量的值。</p>
-<h3 id="如何避免死锁？"><a href="#如何避免死锁？" class="headerlink" title="如何避免死锁？###"></a>如何避免死锁？###</h3><p>Java多线程中的死锁</p>
+<h3 id="如何避免死锁？"><a href="#如何避免死锁？" class="headerlink" title="如何避免死锁？"></a>如何避免死锁？</h3><p>Java多线程中的死锁</p>
 <p>死锁是指两个或两个以上的进程在执行过程中，因争夺资源而造成的一种互相等待的现象，若无外力作用，它们都将无法推进下去。这是一个严重的问题，因为死锁会让你的程序挂起无法完成任务，死锁的发生必须满足以下四个条件：</p>
-<pre><code>互斥条件：一个资源每次只能被一个进程使用。
-请求与保持条件：一个进程因请求资源而阻塞时，对已获得的资源保持不放。
-不剥夺条件：进程已获得的资源，在末使用完之前，不能强行剥夺。
-循环等待条件：若干进程之间形成一种头尾相接的循环等待资源关系。
-</code></pre>
+<ul>
+<li>互斥条件：一个资源每次只能被一个进程使用。</li>
+<li>请求与保持条件：一个进程因请求资源而阻塞时，对已获得的资源保持不放。</li>
+<li>不剥夺条件：进程已获得的资源，在末使用完之前，不能强行剥夺。</li>
+<li>循环等待条件：若干进程之间形成一种头尾相接的循环等待资源关系。</li>
+</ul>
 <p>避免死锁最简单的方法就是阻止循环等待条件，将系统中所有的资源设置标志位、排序，规定所有的进程申请资源必须以一定的顺序（升序或降序）做操作来避免死锁。</p>
 <h3 id="Java中活锁和死锁有什么区别？"><a href="#Java中活锁和死锁有什么区别？" class="headerlink" title="Java中活锁和死锁有什么区别？"></a>Java中活锁和死锁有什么区别？</h3><p>这是上题的扩展，活锁和死锁类似，不同之处在于处于活锁的线程或进程的状态是不断改变的，活锁可以认为是一种特殊的饥饿。一个现实的活锁例子是两个人在狭小的走廊碰到，两个人都试着避让对方好让彼此通过，但是因为避让的方向都一样导致最后谁都不能通过走廊。简单的说就是，活锁和死锁的主要区别是前者进程的状态可以改变但是却不能继续执行。</p>
 <h3 id="什么是Callable和Future"><a href="#什么是Callable和Future" class="headerlink" title="什么是Callable和Future?"></a>什么是Callable和Future?</h3><p>Java 5在concurrency包中引入了java.util.concurrent.Callable 接口，它和Runnable接口很相似，但它可以返回一个对象或者抛出一个异常。</p>
 <p>Callable接口使用泛型去定义它的返回类型。Executors类提供了一些有用的方法去在线程池中执行Callable内的任务。由于Callable任务是并行的，我们必须等待它返回的结果。java.util.concurrent.Future对象为我们解决了这个问题。在线程池提交Callable任务后返回了一个Future对象，使用它我们可以知道Callable任务的状态和得到Callable返回的执行结果。Future提供了get()方法让我们可以等待Callable结束并获取它的执行结果。</p>
 <h3 id="什么是FutureTask"><a href="#什么是FutureTask" class="headerlink" title="什么是FutureTask?"></a>什么是FutureTask?</h3><p>FutureTask包装器是一种非常便利的机制，可将Callable转换成Future和Runnable，它同时实现两者的接口。</p>
 <p>FutureTask类是Future 的一个实现，并实现了Runnable，所以可通过Excutor(线程池) 来执行。也可传递给Thread对象执行。如果在主线程中需要执行比较耗时的操作时，但又不想阻塞主线程时，可以把这些作业交给Future对象在后台完成，当主线程将来需要时，就可以通过Future对象获得后台作业的计算结果或者执行状态。</p>
-<h3 id="有哪些不同的线程生命周期？"><a href="#有哪些不同的线程生命周期？" class="headerlink" title="有哪些不同的线程生命周期？###"></a>有哪些不同的线程生命周期？###</h3><p>当我们在Java程序中新建一个线程时，它的状态是New。当我们调用线程的start()方法时，状态被改变为Runnable。线程调度器会为Runnable线程池中的线程分配CPU时间并且讲它们的状态改变为Running。其他的线程状态还有Waiting，Blocked 和Dead。</p>
+<h3 id="有哪些不同的线程生命周期？"><a href="#有哪些不同的线程生命周期？" class="headerlink" title="有哪些不同的线程生命周期？"></a>有哪些不同的线程生命周期？</h3><p>当我们在Java程序中新建一个线程时，它的状态是New。当我们调用线程的start()方法时，状态被改变为Runnable。线程调度器会为Runnable线程池中的线程分配CPU时间并且讲它们的状态改变为Running。其他的线程状态还有Waiting，Blocked 和Dead。</p>
 <h3 id="线程之间是如何通信的？"><a href="#线程之间是如何通信的？" class="headerlink" title="线程之间是如何通信的？"></a>线程之间是如何通信的？</h3><p>当线程间是可以共享资源时，线程间通信是协调它们的重要的手段。Object类中wait()\notify()\notifyAll()方法可以用于线程间通信关于资源的锁的状态。</p>
-<h3 id="如何确保线程安全？"><a href="#如何确保线程安全？" class="headerlink" title="如何确保线程安全？###"></a>如何确保线程安全？###</h3><p>在Java中可以有很多方法来保证线程安全——</p>
-<p>  同步，<br>  使用原子类(atomic concurrent classes)，<br>  使用显示锁，<br>  使用volatile关键字，<br>  使用不变类</p>
+<h3 id="如何确保线程安全？"><a href="#如何确保线程安全？" class="headerlink" title="如何确保线程安全？"></a>如何确保线程安全？</h3><p>在Java中可以有很多方法来保证线程安全——</p>
+<ul>
+<li>同步，</li>
+<li>使用原子类(atomic concurrent classes)，  </li>
+<li>使用显示锁，</li>
+<li>使用volatile关键字，</li>
+<li>使用不变类</li>
+</ul>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2023/08/18/JAVA%E5%A4%9A%E7%BA%BF%E7%A8%8B/" data-id="cm1j18smn0000z0uk554qflva" data-title="JAVA多线程" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      <a data-url="http://example.com/2023/08/18/JAVA%E5%A4%9A%E7%BA%BF%E7%A8%8B/" data-id="cm1j25itj0000houkedmo88vt" data-title="JAVA多线程" class="article-share-link"><span class="fa fa-share">Share</span></a>
       
       
       
@@ -472,7 +490,7 @@ console-consumer-11967         test_topic             0          unknown        
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2022/08/11/Kafka%E7%9B%B8%E5%85%B3%E5%91%BD%E4%BB%A4/" data-id="cm1j18smt0003z0ukgvtd0ui3" data-title="Kafka相关命令" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      <a data-url="http://example.com/2022/08/11/Kafka%E7%9B%B8%E5%85%B3%E5%91%BD%E4%BB%A4/" data-id="cm1j25itm0001houk7e0d8i7m" data-title="Kafka相关命令" class="article-share-link"><span class="fa fa-share">Share</span></a>
       
       
       
@@ -557,7 +575,7 @@ console-consumer-11967         test_topic             0          unknown        
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2022/08/10/kafka%E8%87%AA%E5%8A%A8%E5%88%9B%E5%BB%BATopic%E8%AE%BE%E7%BD%AE/" data-id="cm1j18smt0004z0uk9q6u14jf" data-title="Partitions与Replication Factor调整准则" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      <a data-url="http://example.com/2022/08/10/kafka%E8%87%AA%E5%8A%A8%E5%88%9B%E5%BB%BATopic%E8%AE%BE%E7%BD%AE/" data-id="cm1j25itq0004houka97t38w2" data-title="Partitions与Replication Factor调整准则" class="article-share-link"><span class="fa fa-share">Share</span></a>
       
       
       
@@ -630,7 +648,7 @@ console-consumer-11967         test_topic             0          unknown        
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2021/06/11/Spark%E9%9D%A2%E5%AF%B9OOM%E9%97%AE%E9%A2%98%E7%9A%84%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95%E5%8F%8A%E4%BC%98%E5%8C%96%E6%80%BB%E7%BB%93/" data-id="cm1j18smr0001z0uk4cjg2c8y" data-title="Spark面对OOM问题的解决方法及优化总结" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      <a data-url="http://example.com/2021/06/11/Spark%E9%9D%A2%E5%AF%B9OOM%E9%97%AE%E9%A2%98%E7%9A%84%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95%E5%8F%8A%E4%BC%98%E5%8C%96%E6%80%BB%E7%BB%93/" data-id="cm1j25itp0003houkbgzchm0e" data-title="Spark面对OOM问题的解决方法及优化总结" class="article-share-link"><span class="fa fa-share">Share</span></a>
       
       
       
@@ -681,7 +699,7 @@ console-consumer-11967         test_topic             0          unknown        
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2021/05/21/index/" data-id="cm1j18sms0002z0uk9wqq0pc0" data-title="index" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      <a data-url="http://example.com/2021/05/21/index/" data-id="cm1j25ito0002houk0cxrgu3j" data-title="index" class="article-share-link"><span class="fa fa-share">Share</span></a>
       
       
       
